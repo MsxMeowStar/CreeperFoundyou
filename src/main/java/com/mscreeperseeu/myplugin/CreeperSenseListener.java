@@ -10,6 +10,8 @@ import org.bukkit.entity.Mob;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageEvent;
 
 public class CreeperSenseListener implements Listener {
 
@@ -31,7 +33,7 @@ public class CreeperSenseListener implements Listener {
 
                 for (Creeper creeper : allLoadedCreepers) {
                     Player closestPlayer = Bukkit.getOnlinePlayers().stream()
-                            .filter(player -> player.isOnline() && !player.isDead())
+                            .filter(player -> player.isOnline() && !player.isDead() && player.getWorld().equals(creeper.getWorld()))
                             .min(Comparator.comparingDouble(p -> p.getLocation().distanceSquared(creeper.getLocation())))
                             .orElse(null);
 
@@ -40,11 +42,19 @@ public class CreeperSenseListener implements Listener {
 
                         if (creeper instanceof Mob) {
                             Mob mobCreeper = (Mob) creeper;
-                            mobCreeper.getPathfinder().moveTo(closestPlayer.getLocation(), 1.5D); // 移速 默认1.0
+                            mobCreeper.getPathfinder().moveTo(closestPlayer.getLocation(), 1.2D);
                         }
                     }
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    @EventHandler
+    public void onCreeperDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Creeper) {
+            Creeper creeper = (Creeper) event.getEntity();
+            creeper.setPowered(true);
+        }
     }
 }
